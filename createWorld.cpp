@@ -199,7 +199,7 @@ int main()
 
   // write the jello variable out to file on disk
   // change jello.w to whatever you need
-  writeWorld("jello.w",&jello);
+  writeWorld("world/my_jello.w",&jello);
 
   return 0;
 }
