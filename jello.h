@@ -28,13 +28,13 @@ extern int sprite;
 
 // mouse control
 extern int g_vMousePos[2];
-extern int g_iLeftMouseButton,g_iMiddleMouseButton,g_iRightMouseButton;
+extern int g_iLeftMouseButton, g_iMiddleMouseButton, g_iRightMouseButton;
 
-struct point 
+struct point
 {
-   double x;
-   double y;
-   double z;
+	double x;
+	double y;
+	double z;
 };
 
 // these variables control what is displayed on the screen
@@ -42,20 +42,20 @@ extern int shear, bend, structural, pause, viewingMode, saveScreenToFile;
 
 struct world
 {
-  char integrator[10]; // "RK4" or "Euler"
-  double dt; // timestep, e.g.. 0.001
-  int n; // display only every nth timepoint
-  double kElastic; // Hook's elasticity coefficient for all springs except collision springs
-  double dElastic; // Damping coefficient for all springs except collision springs
-  double kCollision; // Hook's elasticity coefficient for collision springs
-  double dCollision; // Damping coefficient collision springs
-  double mass; // mass of each of the 512 control points, mass assumed to be equal for every control point
-  int incPlanePresent; // Is the inclined plane present? 1 = YES, 0 = NO (always NO in this assignment)
-  double a,b,c,d; // inclined plane has equation a * x + b * y + c * z + d = 0; if no inclined plane, these four fields are not used
-  int resolution; // resolution for the 3d grid specifying the external force field; value of 0 means that there is no force field
-  struct point * forceField; // pointer to the array of values of the force field
-  struct point p[8][8][8]; // position of the 512 control points
-  struct point v[8][8][8]; // velocities of the 512 control points
+	char integrator[10]; // "RK4" or "Euler"
+	double dt; // timestep, e.g.. 0.001
+	int n; // display only every nth timepoint
+	double kElastic; // Hook's elasticity coefficient for all springs except collision springs
+	double dElastic; // Damping coefficient for all springs except collision springs
+	double kCollision; // Hook's elasticity coefficient for collision springs
+	double dCollision; // Damping coefficient collision springs
+	double mass; // mass of each of the 512 control points, mass assumed to be equal for every control point
+	int incPlanePresent; // Is the inclined plane present? 1 = YES, 0 = NO (always NO in this assignment)
+	double a, b, c, d; // inclined plane has equation a * x + b * y + c * z + d = 0; if no inclined plane, these four fields are not used
+	int resolution; // resolution for the 3d grid specifying the external force field; value of 0 means that there is no force field
+	struct point* forceField; // pointer to the array of values of the force field
+	struct point p[8][8][8]; // position of the 512 control points
+	struct point v[8][8][8]; // velocities of the 512 control points
 };
 
 extern struct world jello;
@@ -96,7 +96,7 @@ extern struct world jello;
   (dest).x = (source).x;\
   (dest).y = (source).y;\
   (dest).z = (source).z;
-  
+
 // assigns values x,y,z to point vector dest
 // struct point dest
 // double x,y,z
