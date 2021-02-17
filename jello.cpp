@@ -213,36 +213,10 @@ void display()
 	glutSwapBuffers();
 }
 
-void doIdle()
-{
-	char s[20] = "picxxxx.ppm";
-	int i;
+void doIdle();
+void animateWithoutPhysics();
+void captureScreenShots();
 
-	// save screen to file
-	s[3] = 48 + (sprite / 1000);
-	s[4] = 48 + (sprite % 1000) / 100;
-	s[5] = 48 + (sprite % 100) / 10;
-	s[6] = 48 + sprite % 10;
-
-	if (saveScreenToFile == 1)
-	{
-		saveScreenshot(windowWidth, windowHeight, s);
-		saveScreenToFile = 0; // save only once, change this if you want continuos image generation (i.e. animation)
-		sprite++;
-	}
-
-	if (sprite >= 300) // allow only 300 snapshots
-	{
-		exit(0);
-	}
-
-	if (pause == 0)
-	{
-		// insert code which appropriately performs one step of the cube simulation:
-	}
-
-	glutPostRedisplay();
-}
 
 int main(int argc, char** argv)
 {
@@ -270,6 +244,7 @@ int main(int argc, char** argv)
 	glutDisplayFunc(display);
 
 	/* replace with any animate code */
+	// I re-structured doIdle() and now it calls physics/simple animation from inside
 	glutIdleFunc(doIdle);
 
 	/* callback for mouse drags */
@@ -296,3 +271,59 @@ int main(int argc, char** argv)
 	return(0);
 }
 
+void doIdle()
+{
+	animateWithoutPhysics();
+
+	captureScreenShots();
+	glutPostRedisplay();
+}
+
+void animateWithoutPhysics()
+{
+	static const double speed = 15.0;
+
+	for (int i = 0; i <= 7; i++) {
+		for (int j = 0; j <= 7; j++) {
+			for (int k = 0; k <= 7; k++) {
+				jello.p[i][j][k].z += jello.dt * speed;
+				//jello.p[i][j][k].y -= jello.dt * speed;
+				//jello.p[i][j][k].x -= jello.dt * speed;
+			}
+		}
+	}
+}
+
+void captureScreenShots() 
+{
+	char s[50] = "screenShots\\picxxxx.ppm";
+	int i;
+
+	// save screen to file
+	/*s[3] = 48 + (sprite / 1000);
+	s[4] = 48 + (sprite % 1000) / 100;
+	s[5] = 48 + (sprite % 100) / 10;
+	s[6] = 48 + sprite % 10;*/
+
+	s[15] = 48 + (sprite / 1000);
+	s[16] = 48 + (sprite % 1000) / 100;
+	s[17] = 48 + (sprite % 100) / 10;
+	s[18] = 48 + sprite % 10;
+
+	if (saveScreenToFile == 1)
+	{
+		saveScreenshot(windowWidth, windowHeight, s);
+		saveScreenToFile = 0; // save only once, change this if you want continous image generation (i.e. animation)
+		sprite++;
+	}
+
+	if (sprite >= 300) // allow only 300 snapshots
+	{
+		exit(0);
+	}
+
+	if (pause == 0)
+	{
+		// insert code which appropriately performs one step of the cube simulation:
+	}
+}

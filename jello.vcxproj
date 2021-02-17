@@ -90,7 +90,8 @@
       <AdditionalLibraryDirectories>$(SolutionDir)\freeglut-3.0.0-win32\lib\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>copy /y $(MSBuildProjectDirectory)\freeglut-3.0.0-win32\bin\Debug\*  $(OutputPath)\</Command>
+      <Command>copy /y $(MSBuildProjectDirectory)\freeglut-3.0.0-win32\bin\Debug\*  $(OutputPath)\
+if not exist "$(MSBuildProjectDirectory)\screenShots" mkdir $(MSBuildProjectDirectory)\screenShots</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
