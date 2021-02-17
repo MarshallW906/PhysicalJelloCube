@@ -286,9 +286,9 @@ void animateWithoutPhysics()
 	for (int i = 0; i <= 7; i++) {
 		for (int j = 0; j <= 7; j++) {
 			for (int k = 0; k <= 7; k++) {
-				jello.p[i][j][k].z += jello.dt * speed;
-				//jello.p[i][j][k].y -= jello.dt * speed;
-				//jello.p[i][j][k].x -= jello.dt * speed;
+				jello.p[i][j][k].z += jello.dt * jello.v[i][j][k].z * speed;
+				jello.p[i][j][k].y += jello.dt * jello.v[i][j][k].y * speed;
+				jello.p[i][j][k].x += jello.dt * jello.v[i][j][k].x * speed;
 			}
 		}
 	}
