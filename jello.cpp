@@ -88,7 +88,6 @@ void display()
 	gluLookAt(R * cos(Phi) * cos(Theta), R * sin(Phi) * cos(Theta), R * sin(Theta),
 		0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
 
-
 	/* Lighting */
 	/* You are encouraged to change lighting parameters or make improvements/modifications
 	   to the lighting model .
@@ -281,7 +280,7 @@ void doIdle()
 
 void animateWithoutPhysics()
 {
-	static const double speed = 15.0;
+	static const double speed = 2.5;
 
 	for (int i = 0; i <= 7; i++) {
 		for (int j = 0; j <= 7; j++) {
