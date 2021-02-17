@@ -96,42 +96,48 @@ void display()
 	*/
 
 	// global ambient light
+	// now ambient: none (black)
 	GLfloat aGa[] = { 0.0, 0.0, 0.0, 0.0 };
 
 	// light 's ambient, diffuse, specular
 	GLfloat lKa0[] = { 0.0, 0.0, 0.0, 1.0 };
-	GLfloat lKd0[] = { 1.0, 1.0, 1.0, 1.0 };
-	GLfloat lKs0[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat lKd0[] = { 1.0, 1.0, 1.0, 1.0 }; // white
+	GLfloat lKs0[] = { 1.0, 1.0, 1.0, 1.0 }; // white
 
 	GLfloat lKa1[] = { 0.0, 0.0, 0.0, 1.0 };
-	GLfloat lKd1[] = { 1.0, 0.0, 0.0, 1.0 };
-	GLfloat lKs1[] = { 1.0, 0.0, 0.0, 1.0 };
+	GLfloat lKd1[] = { 1.0, 0.0, 0.0, 1.0 }; // red
+	GLfloat lKs1[] = { 1.0, 0.0, 0.0, 1.0 }; // red
 
 	GLfloat lKa2[] = { 0.0, 0.0, 0.0, 1.0 };
-	GLfloat lKd2[] = { 1.0, 1.0, 0.0, 1.0 };
-	GLfloat lKs2[] = { 1.0, 1.0, 0.0, 1.0 };
+	GLfloat lKd2[] = { 1.0, 1.0, 0.0, 1.0 }; // yellow
+	GLfloat lKs2[] = { 1.0, 1.0, 0.0, 1.0 }; // yellow
 
 	GLfloat lKa3[] = { 0.0, 0.0, 0.0, 1.0 };
-	GLfloat lKd3[] = { 0.0, 1.0, 1.0, 1.0 };
-	GLfloat lKs3[] = { 0.0, 1.0, 1.0, 1.0 };
+	GLfloat lKd3[] = { 0.0, 1.0, 1.0, 1.0 }; // cyan
+	GLfloat lKs3[] = { 0.0, 1.0, 1.0, 1.0 }; // cyan
 
 	GLfloat lKa4[] = { 0.0, 0.0, 0.0, 1.0 };
-	GLfloat lKd4[] = { 0.0, 0.0, 1.0, 1.0 };
-	GLfloat lKs4[] = { 0.0, 0.0, 1.0, 1.0 };
+	GLfloat lKd4[] = { 0.0, 0.0, 1.0, 1.0 }; // blue
+	GLfloat lKs4[] = { 0.0, 0.0, 1.0, 1.0 }; // blue
 
 	GLfloat lKa5[] = { 0.0, 0.0, 0.0, 1.0 };
-	GLfloat lKd5[] = { 1.0, 0.0, 1.0, 1.0 };
-	GLfloat lKs5[] = { 1.0, 0.0, 1.0, 1.0 };
+	GLfloat lKd5[] = { 1.0, 0.0, 1.0, 1.0 }; // purple/magenta
+	GLfloat lKs5[] = { 1.0, 0.0, 1.0, 1.0 }; // purple/magenta
 
 	GLfloat lKa6[] = { 0.0, 0.0, 0.0, 1.0 };
-	GLfloat lKd6[] = { 1.0, 1.0, 1.0, 1.0 };
-	GLfloat lKs6[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat lKd6[] = { 1.0, 1.0, 1.0, 1.0 }; // white
+	GLfloat lKs6[] = { 1.0, 1.0, 1.0, 1.0 }; // white
 
 	GLfloat lKa7[] = { 0.0, 0.0, 0.0, 1.0 };
-	GLfloat lKd7[] = { 0.0, 1.0, 1.0, 1.0 };
-	GLfloat lKs7[] = { 0.0, 1.0, 1.0, 1.0 };
+	GLfloat lKd7[] = { 0.0, 1.0, 1.0, 1.0 }; // cyan
+	GLfloat lKs7[] = { 0.0, 1.0, 1.0, 1.0 }; // cyan
 
 	// light positions and directions
+	// so by default they are 8 point lights stationed at the 8 sections divided by the xyz axes
+	// if w==0, then the light is treated as a directional light and attenuation is disabled
+	// otherwise it's a point light
+	// lemme change some of them to directional lights
+	/* default values
 	GLfloat lP0[] = { -1.999, -1.999, -1.999, 1.0 };
 	GLfloat lP1[] = { 1.999, -1.999, -1.999, 1.0 };
 	GLfloat lP2[] = { 1.999, 1.999, -1.999, 1.0 };
@@ -140,13 +146,25 @@ void display()
 	GLfloat lP5[] = { 1.999, -1.999, 1.999, 1.0 };
 	GLfloat lP6[] = { 1.999, 1.999, 1.999, 1.0 };
 	GLfloat lP7[] = { -1.999, 1.999, 1.999, 1.0 };
+	*/
+	GLfloat lP0[] = { -1.999, -1.999, -1.999, 0.0 };
+	GLfloat lP1[] = { 1.999, -1.999, -1.999, 0.0 };
+	GLfloat lP2[] = { 1.999, 1.999, -1.999, 0.0 };
+	GLfloat lP3[] = { -1.999, 1.999, -1.999, 0.0 };
+	GLfloat lP4[] = { -1.999, -1.999, 1.999, 1.0 };
+	GLfloat lP5[] = { 1.999, -1.999, 1.999, 1.0 };
+	GLfloat lP6[] = { 1.999, 1.999, 1.999, 1.0 };
+	GLfloat lP7[] = { -1.999, 1.999, 1.999, 1.0 };
 
 	// jelly material color
 
 	GLfloat mKa[] = { 0.0, 0.0, 0.0, 1.0 };
-	GLfloat mKd[] = { 0.3, 0.3, 0.3, 1.0 };
-	GLfloat mKs[] = { 1.0, 1.0, 1.0, 1.0 };
-	GLfloat mKe[] = { 0.0, 0.0, 0.0, 1.0 };
+	GLfloat mKd[] = { 0.3, 0.3, 0.3, 1.0 }; // provided default value: 0.7*black + 0.3*white "grey"
+	//GLfloat mKd[] = { 0.2, 0.7, 0.7, 1.0 };   // lets make it a cyan-ish cube
+	//GLfloat mKs[] = { 1.0, 1.0, 1.0, 1.0 }; // default: white
+	GLfloat mKs[] = { 1.0, 0.0, 0.0, 1.0 }; // a red specular color 
+	//GLfloat mKe[] = { 0.0, 0.0, 0.0, 1.0 }; // emission, default: none(black)
+	GLfloat mKe[] = { 0.0, 0.25, 0.25, 1.0 }; // cyan-ish 
 
 	/* set up lighting */
 	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, aGa);
@@ -158,7 +176,7 @@ void display()
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, mKd);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mKs);
 	glMaterialfv(GL_FRONT, GL_EMISSION, mKe);
-	glMaterialf(GL_FRONT, GL_SHININESS, 120);
+	glMaterialf(GL_FRONT, GL_SHININESS, 10); // default is 120
 
 	// macro to set up light i
 #define LIGHTSETUP(i)\
@@ -168,6 +186,9 @@ void display()
   glLightfv(GL_LIGHT##i, GL_SPECULAR, lKs##i);\
   glEnable(GL_LIGHT##i)
 
+	// it CAN support more than eight lights
+	// but we will need to use "GL_LIGHT0 + n", where n is the n-th light we are setting
+	// 8 lights per polygon is plenty though
 	LIGHTSETUP(0);
 	LIGHTSETUP(1);
 	LIGHTSETUP(2);
