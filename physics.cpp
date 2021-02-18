@@ -14,6 +14,56 @@
 void computeAcceleration(struct world* jello, struct point a[8][8][8])
 {
 	/* for you to implement ... */
+	// F = ma
+
+	// Hook's law: double f_hook=kx
+	// rest length: structural 1.0/7, shear: 1.0 / 7 * sqrt(2) OR 1.0 / 7 * sqrt(3), bend: 1.0 / 7 * 2
+	static const double restLengthStructural = 1.0 / 7;
+	static const double restLengthShearDiagonal2D = restLengthStructural * sqrt(2.0);
+	static const double restLengthShearDiagonal3D = restLengthStructural * sqrt(3.0);
+	static const double restLengthBend = restLengthStructural * 2;
+
+	// for both linear Hook and linear damp, the forces on the spring are always opposite on the two ends
+	// so we need to update both: cache[x1][y1][z1][x2][y2][z2] == -cache[x2][y2][z2][x1][y1][z1] == the value
+	static bool fCacheForceCalculated[8][8][8][8][8][8];
+	static struct point fCacheForceBetweenPoints [8][8][8][8][8][8];
+
+	// Linear Hook: double f_hookLinear = k_hook * x
+	memset(fCacheForceCalculated, 0, sizeof(bool) * 512 * 512);
+	memset(fCacheForceBetweenPoints, 0, sizeof(struct point) * 512 * 512);
+	struct point fHookLinear[8][8][8];
+	for (int i = 0; i <= 7; i++) {
+		for (int j = 0; j <= 7; j++) {
+			for (int k = 0; k <= 7; k++) {
+				// hookLinear: structural
+				// hookLinear: shear2D
+				// hookLinear: shear3D
+				// hookLinear: bend
+			}
+		}
+	}
+
+	// Linear damping: double f_linearDamp=-k_damp * v, where v is the relative speed ON THE SPRING'S DIRECTION
+	memset(fCacheForceCalculated, 0, sizeof(bool) * 512 * 512);
+	memset(fCacheForceBetweenPoints, 0, sizeof(struct point) * 512 * 512);
+	struct point fDampLinear[8][8][8];
+	for (int i = 0; i <= 7; i++) {
+		for (int j = 0; j <= 7; j++) {
+			for (int k = 0; k <= 7; k++) {
+				// Damplinear: structural
+				// Damplinear: shear2D
+				// Damplinear: shear3D
+				// Damplinear: bend
+			}
+		}
+	}
+
+	// Force field: double f_extForceField
+	// trilinear interpolate and get the actual force at certain points
+	//struct point fExtForce[8][8][8];
+
+	// at last: double f_all = ma, then a = f_all / m
+	
 }
 
 /* performs one step of Euler Integration */
