@@ -16,6 +16,8 @@ What I have done:
 - changed some lighting/material settings to my preferred color, cyan-ish
 - tested simple animation: move each mass points by its (jello.v * dt)
 - restructured doIdle(), where inside it calls Animate(), captureScreenShots() and then glutPostRedisplay()
+- changed macro pMAKE, making it more compatible with struct point
+
 
 <Also, explain any extra credit that you have implemented.>
 

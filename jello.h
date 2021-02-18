@@ -100,11 +100,11 @@ extern struct world jello;
 // assigns values x,y,z to point vector dest
 // struct point dest
 // double x,y,z
-#define pMAKE(x,y,z,dest)\
+#define pMAKE(xVal,yVal,zVal,dest)\
 \
-  (dest).(x) = (x);\
-  (dest).(y) = (y);\
-  (dest).(z) = (z);
+  (dest).x = (xVal);\
+  (dest).y = (yVal);\
+  (dest).z = (zVal);
 
 // sums points src1 and src2 to dest
 // struct point src1,src2,dest
@@ -133,3 +133,9 @@ extern struct world jello;
 
 #endif
 
+// calculate src's length into destLength
+// struct point src
+// double destLength
+#define pLENGTH(src, destLength) \
+\
+	(destLength) = sqrt((src).x * (src).x + (src).y * (src).y + (src).z * (src).z);
