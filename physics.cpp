@@ -8,6 +8,12 @@
 #include "jello.h"
 #include "physics.h"
 
+static bool isValidIndex(int i, int j, int k);
+static struct point computeHookForceOnA(struct world* jello, int xA, int yA, int zA, int xB, int yB, int zB, double restLength,
+	bool fCacheForceCalculated[8][8][8][8][8][8], struct point fCacheForceHookLinear[8][8][8][8][8][8]);
+static struct point computeDampForceOnA(struct world* jello, int xA, int yA, int zA, int xB, int yB, int zB,
+	bool fCacheForceCalculated[8][8][8][8][8][8], struct point fCacheForceDampLinear[8][8][8][8][8][8]);
+
 /* Computes acceleration to every control point of the jello cube,
    which is in state given by 'jello'.
    Returns result in array 'a'. */
@@ -26,44 +32,397 @@ void computeAcceleration(struct world* jello, struct point a[8][8][8])
 	// for both linear Hook and linear damp, the forces on the spring are always opposite on the two ends
 	// so we need to update both: cache[x1][y1][z1][x2][y2][z2] == -cache[x2][y2][z2][x1][y1][z1] == the value
 	static bool fCacheForceCalculated[8][8][8][8][8][8];
-	static struct point fCacheForceBetweenPoints [8][8][8][8][8][8];
+	static struct point fCacheForceHookLinear[8][8][8][8][8][8];
+	static struct point fCacheForceDampLinear[8][8][8][8][8][8];
 
-	// Linear Hook: double f_hookLinear = k_hook * x
-	memset(fCacheForceCalculated, 0, sizeof(bool) * 512 * 512);
-	memset(fCacheForceBetweenPoints, 0, sizeof(struct point) * 512 * 512);
-	struct point fHookLinear[8][8][8];
-	for (int i = 0; i <= 7; i++) {
-		for (int j = 0; j <= 7; j++) {
-			for (int k = 0; k <= 7; k++) {
-				// hookLinear: structural
-				// hookLinear: shear2D
-				// hookLinear: shear3D
-				// hookLinear: bend
-			}
-		}
-	}
-
+	// Linear Hook: double f_hookLinear = jello->kElastic * x
 	// Linear damping: double f_linearDamp=-k_damp * v, where v is the relative speed ON THE SPRING'S DIRECTION
 	memset(fCacheForceCalculated, 0, sizeof(bool) * 512 * 512);
-	memset(fCacheForceBetweenPoints, 0, sizeof(struct point) * 512 * 512);
-	struct point fDampLinear[8][8][8];
+	memset(fCacheForceHookLinear, 0, sizeof(struct point) * 512 * 512);
+	memset(fCacheForceDampLinear, 0, sizeof(struct point) * 512 * 512);
+
+	struct point fHookLinear[8][8][8] = { {{0.0}} };
+	struct point fDampLinear[8][8][8] = { {{0.0}} };
 	for (int i = 0; i <= 7; i++) {
 		for (int j = 0; j <= 7; j++) {
 			for (int k = 0; k <= 7; k++) {
-				// Damplinear: structural
-				// Damplinear: shear2D
-				// Damplinear: shear3D
-				// Damplinear: bend
+				// structural
+				{
+					if (isValidIndex(i - 1, j, k)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i - 1, j, k,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i - 1, j, k,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					if (isValidIndex(i + 1, j, k)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i + 1, j, k,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i + 1, j, k,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					if (isValidIndex(i, j - 1, k)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i, j - 1, k,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i, j - 1, k,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					if (isValidIndex(i, j + 1, k)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i, j + 1, k,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i, j + 1, k,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					if (isValidIndex(i, j, k - 1)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i, j, k - 1,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i, j, k - 1,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					if (isValidIndex(i, j, k + 1)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i, j, k + 1,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i, j, k + 1,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+				}
+				// shear2D
+				{
+					// k-plane
+					if (isValidIndex(i - 1, j - 1, k)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i - 1, j - 1, k,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i - 1, j - 1, k,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					if (isValidIndex(i - 1, j + 1, k)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i - 1, j + 1, k,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i - 1, j + 1, k,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					if (isValidIndex(i + 1, j - 1, k)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i + 1, j - 1, k,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i + 1, j - 1, k,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					if (isValidIndex(i + 1, j + 1, k)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i + 1, j + 1, k,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i + 1, j + 1, k,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					// j-plane
+					if (isValidIndex(i - 1, j, k - 1)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i - 1, j, k - 1,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i - 1, j, k - 1,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					if (isValidIndex(i - 1, j, k + 1)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i - 1, j, k + 1,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i - 1, j, k + 1,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					if (isValidIndex(i + 1, j, k - 1)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i + 1, j, k - 1,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i + 1, j, k - 1,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					if (isValidIndex(i + 1, j, k + 1)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i + 1, j, k + 1,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i + 1, j, k + 1,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					// i-plane
+					if (isValidIndex(i, j - 1, k - 1)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i, j - 1, k - 1,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i, j - 1, k - 1,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					if (isValidIndex(i, j - 1, k + 1)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i, j - 1, k + 1,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i, j - 1, k + 1,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					if (isValidIndex(i, j + 1, k - 1)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i, j + 1, k - 1,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i, j + 1, k - 1,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					if (isValidIndex(i, j + 1, k + 1)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i, j + 1, k + 1,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i, j + 1, k + 1,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+				}
+				// shear3D
+				{
+					// ---
+					if (isValidIndex(i - 1, j - 1, k - 1)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i - 1, j - 1, k - 1,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i - 1, j - 1, k - 1,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+					// --+
+					if (isValidIndex(i - 1, j - 1, k + 1)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i - 1, j - 1, k + 1,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i - 1, j - 1, k + 1,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+					// -++
+					if (isValidIndex(i - 1, j + 1, k + 1)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i - 1, j + 1, k + 1,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i - 1, j + 1, k + 1,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+					// -+-
+					if (isValidIndex(i - 1, j + 1, k - 1)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i - 1, j + 1, k - 1,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i - 1, j + 1, k - 1,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+					// +--
+					if (isValidIndex(i + 1, j - 1, k - 1)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i + 1, j - 1, k - 1,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i + 1, j - 1, k - 1,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+					// +-+
+					if (isValidIndex(i + 1, j - 1, k + 1)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i + 1, j - 1, k + 1,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i + 1, j - 1, k + 1,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+					// +++
+					if (isValidIndex(i + 1, j + 1, k + 1)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i + 1, j + 1, k + 1,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i + 1, j + 1, k + 1,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+					// ++-
+					if (isValidIndex(i + 1, j + 1, k - 1)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i + 1, j + 1, k - 1,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i + 1, j + 1, k - 1,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+				}
+				// bend
+				{
+					if (isValidIndex(i - 2, j, k)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i - 2, j, k,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i - 2, j, k,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					if (isValidIndex(i + 2, j, k)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i + 2, j, k,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i + 2, j, k,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					if (isValidIndex(i, j - 2, k)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i, j - 2, k,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i, j - 2, k,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					if (isValidIndex(i, j + 2, k)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i, j + 2, k,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i, j + 2, k,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					if (isValidIndex(i, j, k - 2)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i, j, k - 2,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i, j, k - 2,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+
+					if (isValidIndex(i, j, k + 2)) {
+						struct point fHookResult =
+							computeHookForceOnA(jello, i, j, k, i, j, k + 2,
+								restLengthStructural, fCacheForceCalculated, fCacheForceHookLinear);
+						pSUM(fHookLinear[i][j][k], fHookResult, fHookLinear[i][j][k]);
+						struct point fDampResult =
+							computeDampForceOnA(jello, i, j, k, i, j, k + 2,
+								fCacheForceCalculated, fCacheForceDampLinear);
+						pSUM(fDampLinear[i][j][k], fDampResult, fDampLinear[i][j][k]);
+					}
+				}
 			}
 		}
 	}
+
 
 	// Force field: double f_extForceField
 	// trilinear interpolate and get the actual force at certain points
 	//struct point fExtForce[8][8][8];
 
+	// collision
+
 	// at last: double f_all = ma, then a = f_all / m
-	
+
 }
 
 /* performs one step of Euler Integration */
@@ -183,4 +542,52 @@ void RK4(struct world* jello)
 			}
 
 	return;
+}
+
+bool isValidIndex(int i, int j, int k)
+{
+	return (i >= 0) && (i <= 7) && (j >= 0) && (j <= 7) && (k >= 0) && (k <= 7);
+}
+
+struct point computeHookForceOnA(struct world* jello, int xA, int yA, int zA, int xB, int yB, int zB, double restLength,
+	bool fCacheForceCalculated[8][8][8][8][8][8], struct point fCacheForceHookLinear[8][8][8][8][8][8])
+{
+	// if (calculated) {fTmp = fCache[i][j][k][i-1][j][k];}
+					// else { fTmp = fCache[i][j][k][i-1][j][k] = jello->kElastic kElastic * (x - x0); }
+					// fHookLinear[i][j][k] += fTmp;
+	struct point fHookResult;
+	if (fCacheForceCalculated[xA][yA][zA][xB][yB][zB]) {
+		fHookResult = fCacheForceHookLinear[xA][yA][zA][xB][yB][zB];
+	}
+	else {
+		// calc & write cache
+		struct point realSpringVector;
+		pDIFFERENCE(jello->p[xA][yA][zA], jello->p[xB][yB][zB], realSpringVector);
+		double realLength;
+		pLENGTH(realSpringVector, realLength);
+		double fHook3D = -jello->kElastic * (realLength - restLength); // -k_hook * (L_length - R)
+		struct point realSpringVectorNormalized;
+		pCPY(realSpringVector, realSpringVectorNormalized);
+		double length; // to use pNORMALIZE
+		pNORMALIZE(realSpringVectorNormalized);
+		// calc result
+		pMAKE(fHook3D * realSpringVectorNormalized.x,
+			fHook3D * realSpringVectorNormalized.y,
+			fHook3D * realSpringVectorNormalized.z,
+			fHookResult);
+		// update cache for both [PointA,PointB] & [PointB,PointA]
+		pCPY(fHookResult, fCacheForceHookLinear[xA][yA][zA][xB][yB][zB]);
+		pMAKE(-fHookResult.x, -fHookResult.y, -fHookResult.z, fCacheForceHookLinear[xB][yB][zB][xA][yA][zA]);
+		fCacheForceCalculated[xA][yA][zA][xB][yB][zB] = true;
+		fCacheForceCalculated[xB][yB][zB][xA][yA][zA] = true;
+	}
+	return fHookResult;
+}
+
+struct point computeDampForceOnA(world* jello, int xA, int yA, int zA, int xB, int yB, int zB,
+	bool fCacheForceCalculated[8][8][8][8][8][8], point fCacheForceDampLinear[8][8][8][8][8][8])
+{
+	// first project both vA & vB onto the target spring by dotProduct(v, dirNormalized) 
+	// then calc
+	return point();
 }
