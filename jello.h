@@ -114,7 +114,7 @@ extern struct world jello;
   (dest).y = (src1).y + (src2).y;\
   (dest).z = (src1).z + (src2).z;
 
-// dest = src2 - src1
+// dest = src1 - src2
 // struct point src1,src2,dest
 #define pDIFFERENCE(src1,src2,dest)\
 \
@@ -139,3 +139,11 @@ extern struct world jello;
 #define pLENGTH(src, destLength) \
 \
 	(destLength) = sqrt((src).x * (src).x + (src).y * (src).y + (src).z * (src).z);
+
+// computes dotproduct of three vectors, which are given as points
+// struct point vector1, vector2, 
+// double dest
+// result goes into dest
+#define DOTPRODUCTp(vector1, vector2, dest) \
+\
+	(dest) = ((vector1).x) * ((vector2).x) + ((vector1).y) * ((vector2).y) + ((vector1).z) * ((vector2).z);
