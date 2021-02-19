@@ -272,7 +272,18 @@ int main(int argc, char** argv)
 
 void doIdle()
 {
-	animateWithoutPhysics();
+	//animateWithoutPhysics();
+
+	for (int i = 1; i <= jello.n; i++)
+	{
+		if (pause == 0) {
+			if (jello.integrator[0] == 'E') // Euler
+				Euler(&jello);
+			if (jello.integrator[0] == 'R') // RK4
+				RK4(&jello);
+			//pause = 1;
+		}
+	}
 
 	captureScreenShots();
 	glutPostRedisplay();
@@ -293,7 +304,7 @@ void animateWithoutPhysics()
 	}
 }
 
-void captureScreenShots() 
+void captureScreenShots()
 {
 	char s[50] = "screenShots\\picxxxx.ppm";
 	int i;
@@ -321,8 +332,11 @@ void captureScreenShots()
 		exit(0);
 	}
 
+	/*
+	// I moved it into doIdle()
 	if (pause == 0)
 	{
 		// insert code which appropriately performs one step of the cube simulation:
 	}
+	*/
 }

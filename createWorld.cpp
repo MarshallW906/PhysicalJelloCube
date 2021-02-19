@@ -126,8 +126,8 @@ int main()
 	// set the integrator and the physical parameters
 	// the values below are EXAMPLES, to be modified by you as needed
 	strcpy(jello.integrator, "RK4");
-	jello.dt = 0.0005000;
-	jello.n = 5;
+	jello.dt = 0.0005;
+	jello.n = 1;
 	jello.kElastic = 200;
 	jello.dElastic = 0.25;
 	jello.kCollision = 400.0;
@@ -168,9 +168,9 @@ int main()
 		for (j = 0; j <= 7; j++)
 			for (k = 0; k <= 7; k++)
 			{
-				jello.p[i][j][k].x = 1.0 * i / 7;
+				jello.p[i][j][k].x = 2.0 * i / 7;
 				jello.p[i][j][k].y = 1.0 * j / 7;
-				jello.p[i][j][k].z = 1.0 * k / 7;
+				jello.p[i][j][k].z = 0.5 * k / 7;
 				/* :O :w
 				 Is this intentionally left here so that we will definitely notice the weird position of the corner point
 				 and then we will have to figure out what goes wrong with createWorld?
@@ -182,15 +182,20 @@ int main()
 				 - Then I was looking for a value in the world file that is not between [0, 1.0] and I found the three 1.142857s, which are 8/7
 				 
 				It's fun! Thank you sir I really like the way you are teaching us, both the lecture and the code :)
+				
+				////////////////////////////////////////////////////////////
+				Update after I finished calculation of Hook & Damp:
+				Well now I realized that this is an easiest way to test if my Hook & Damp's calculation is correct :\
+
 				*/
-				/*
+				
 				if ((i==7) && (j==7) && (k==7))
 				{
 				  jello.p[i][j][k].x=1.0 + 1.0 / 7;
 					  jello.p[i][j][k].y=1.0 + 1.0 / 7;
 					  jello.p[i][j][k].z=1.0 + 1.0 / 7;
 				}
-				*/
+				
 
 			}
 
@@ -199,9 +204,9 @@ int main()
 		for (j = 0; j <= 7; j++)
 			for (k = 0; k <= 7; k++)
 			{
-				jello.v[i][j][k].x = 0.0;
+				jello.v[i][j][k].x = 5.0;
 				jello.v[i][j][k].y = 0.0;
-				jello.v[i][j][k].z = -10.0;
+				jello.v[i][j][k].z = 0.0;
 			}
 
 	// write the jello variable out to file on disk
