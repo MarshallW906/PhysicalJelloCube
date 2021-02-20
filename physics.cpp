@@ -16,6 +16,14 @@ static struct point computeHookForceOnA(struct world* jello, int xA, int yA, int
 static struct point computeDampForceOnA(struct world* jello, int xA, int yA, int zA, int xB, int yB, int zB,
 	bool fCacheForceDampCalculated[8][8][8][8][8][8], struct point fCacheForceDampLinear[8][8][8][8][8][8]);
 
+void computeCollisionHookAndDampFromBoundingBox(struct world* jello, struct point fCollision[8][8][8]);
+static struct point computeCollisionHookForce(const struct point& massPoint, double kCollision,
+	double collisionPointX, double collisionPointY, double collisionPointZ);
+// here we simplified the case, which is that the velocityB is always zero
+// because for now all the objects other than the cube are static
+static struct point computeCollisionDampForce(const struct point& massPoint, const struct point& curPointVelocity, double dCollision,
+	double collisionPointX, double collisionPointY, double collisionPointZ);
+
 /* Computes acceleration to every control point of the jello cube,
    which is in state given by 'jello'.
    Returns result in array 'a'. */
@@ -26,8 +34,9 @@ void computeAcceleration(struct world* jello, struct point a[8][8][8])
 	struct point fDampLinear[8][8][8] = { {{0.0}} };
 	computeLinearHookAndDamp(jello, fHookLinear, fDampLinear);
 
-	// collision
-	// box's 6 sides: <xmin, >xmax, <ymin, >ymax, <zmin, >zmax
+	// collision from bounding box: hook & damp
+	struct point fCollision[8][8][8] = { {{0.0}} };
+	computeCollisionHookAndDampFromBoundingBox(jello, fCollision);
 
 	// inclined plane: F(x,y,z) = ax+by+cz+d = 0, on the plane. 
 	// If more than 50% points is on one side and the rest is on the other side
@@ -43,7 +52,12 @@ void computeAcceleration(struct world* jello, struct point a[8][8][8])
 	for (int i = 0; i <= 7; i++) {
 		for (int j = 0; j <= 7; j++) {
 			for (int k = 0; k <= 7; k++) {
-				pSUM(fHookLinear[i][j][k], fDampLinear[i][j][k], sumForce);
+				//pSUM(fHookLinear[i][j][k], fDampLinear[i][j][k], sumForce);
+				pMAKE(
+					fHookLinear[i][j][k].x + fDampLinear[i][j][k].x + fCollision[i][j][k].x,
+					fHookLinear[i][j][k].y + fDampLinear[i][j][k].y + fCollision[i][j][k].y,
+					fHookLinear[i][j][k].z + fDampLinear[i][j][k].z + fCollision[i][j][k].z,
+					sumForce);
 				pMULTIPLY(sumForce, (1.0 / jello->mass), a[i][j][k]);
 			}
 		}
@@ -636,4 +650,104 @@ struct point computeDampForceOnA(struct world* jello, int xA, int yA, int zA, in
 		fCacheForceDampCalculated[xB][yB][zB][xA][yA][zA] = true;
 	}
 	return fDampResult;
+}
+
+void computeCollisionHookAndDampFromBoundingBox(world* jello, point fCollision[8][8][8])
+{
+	// box's 6 sides: <xmin, >xmax, <ymin, >ymax, <zmin, >zmax
+	for (int i = 0; i <= 7; i++) {
+		for (int j = 0; j <= 7; j++) {
+			for (int k = 0; k <= 7; k++) {
+				const struct point& curPoint = jello->p[i][j][k];
+				const struct point& curPointVelocity = jello->v[i][j][k];
+				// here we can easily get collision point because the bounding box's planes are all (x/y/z = +/- 2)
+				if (curPoint.x < -2) {
+					struct point fCollisionHook = computeCollisionHookForce(curPoint, jello->kCollision, -2, curPoint.y, curPoint.z);
+					pSUM(fCollisionHook, fCollision[i][j][k], fCollision[i][j][k]);
+
+					struct point fCollisionDamp = computeCollisionDampForce(curPoint, curPointVelocity, jello->dCollision, -2, curPoint.y, curPoint.z);
+					pSUM(fCollisionDamp, fCollision[i][j][k], fCollision[i][j][k]);
+				}
+				if (curPoint.x > 2) {
+					struct point fCollisionHook = computeCollisionHookForce(curPoint, jello->kCollision, 2, curPoint.y, curPoint.z);
+					pSUM(fCollisionHook, fCollision[i][j][k], fCollision[i][j][k]);
+
+					struct point fCollisionDamp = computeCollisionDampForce(curPoint, curPointVelocity, jello->dCollision, 2, curPoint.y, curPoint.z);
+					pSUM(fCollisionDamp, fCollision[i][j][k], fCollision[i][j][k]);
+				}
+				if (curPoint.y < -2) {
+					struct point fCollisionHook = computeCollisionHookForce(curPoint, jello->kCollision, curPoint.x, -2, curPoint.z);
+					pSUM(fCollisionHook, fCollision[i][j][k], fCollision[i][j][k]);
+
+					struct point fCollisionDamp = computeCollisionDampForce(curPoint, curPointVelocity, jello->dCollision, curPoint.x, -2, curPoint.z);
+					pSUM(fCollisionDamp, fCollision[i][j][k], fCollision[i][j][k]);
+				}
+				if (curPoint.y > 2) {
+					struct point fCollisionHook = computeCollisionHookForce(curPoint, jello->kCollision, curPoint.x, 2, curPoint.z);
+					pSUM(fCollisionHook, fCollision[i][j][k], fCollision[i][j][k]);
+
+					struct point fCollisionDamp = computeCollisionDampForce(curPoint, curPointVelocity, jello->dCollision, curPoint.x, 2, curPoint.z);
+					pSUM(fCollisionDamp, fCollision[i][j][k], fCollision[i][j][k]);
+				}
+				if (curPoint.z < -2) {
+					struct point fCollisionHook = computeCollisionHookForce(curPoint, jello->kCollision, curPoint.x, curPoint.y, -2);
+					pSUM(fCollisionHook, fCollision[i][j][k], fCollision[i][j][k]);
+
+					struct point fCollisionDamp = computeCollisionDampForce(curPoint, curPointVelocity, jello->dCollision, curPoint.x, curPoint.y, -2);
+					pSUM(fCollisionDamp, fCollision[i][j][k], fCollision[i][j][k]);
+				}
+				if (curPoint.z > 2) {
+					struct point fCollisionHook = computeCollisionHookForce(curPoint, jello->kCollision, curPoint.x, curPoint.y, 2);
+					pSUM(fCollisionHook, fCollision[i][j][k], fCollision[i][j][k]);
+
+					struct point fCollisionDamp = computeCollisionDampForce(curPoint, curPointVelocity, jello->dCollision, curPoint.x, curPoint.y, 2);
+					pSUM(fCollisionDamp, fCollision[i][j][k], fCollision[i][j][k]);
+				}
+			}
+		}
+	}
+}
+
+struct point computeCollisionHookForce(const point& massPoint, double kCollision,
+	double collisionPointX, double collisionPointY, double collisionPointZ)
+{
+	struct point collisionPoint, collisionSpringVector;
+	pMAKE(collisionPointX, collisionPointY, collisionPointZ, collisionPoint);
+	pDIFFERENCE(massPoint, collisionPoint, collisionSpringVector);
+	double collisionSpringLength;
+	pLENGTH(collisionSpringVector, collisionSpringLength);
+	double fHookCollision3D = -kCollision * (collisionSpringLength /*- 0, restLength == 0*/);
+
+	struct point fHookCollision, collisionSpringVectorNormalized;
+	double length; // to use pNORMALIZE
+	pCPY(collisionSpringVector, collisionSpringVectorNormalized);
+	pNORMALIZE(collisionSpringVectorNormalized);
+	pMAKE(fHookCollision3D * collisionSpringVectorNormalized.x,
+		fHookCollision3D * collisionSpringVectorNormalized.y,
+		fHookCollision3D * collisionSpringVectorNormalized.z,
+		fHookCollision);
+
+	return fHookCollision;
+}
+
+point computeCollisionDampForce(const point& massPoint, const point& curPointVelocity, double dCollision, double collisionPointX, double collisionPointY, double collisionPointZ)
+{
+	struct point collisionPoint, collisionSpringVectorNormalized;
+	pMAKE(-2, 0, 0, collisionPoint);
+	pDIFFERENCE(massPoint, collisionPoint, collisionSpringVectorNormalized);
+	double length; // to use pNORMALIZE
+	pNORMALIZE(collisionSpringVectorNormalized);
+	// here vB is always zero because it's a point on the static bounding box
+	// vA-vB is always vA so we can simply take vA as the relative speed
+	// pDIFFERENCE(curPointVelocity, velocityB, relativeSpeedVector) // we dont need this in this case
+	double relativeSpeedOnSpring;
+	DOTPRODUCTp(curPointVelocity, collisionSpringVectorNormalized, relativeSpeedOnSpring);
+	double fCollisionDamp3D = -dCollision * relativeSpeedOnSpring;
+	struct point fCollisionDamp;
+	pMAKE(fCollisionDamp3D * collisionSpringVectorNormalized.x,
+		fCollisionDamp3D * collisionSpringVectorNormalized.y,
+		fCollisionDamp3D * collisionSpringVectorNormalized.z,
+		fCollisionDamp);
+
+	return fCollisionDamp;
 }

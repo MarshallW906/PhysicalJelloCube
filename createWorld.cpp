@@ -204,9 +204,9 @@ int main()
 		for (j = 0; j <= 7; j++)
 			for (k = 0; k <= 7; k++)
 			{
-				jello.v[i][j][k].x = 5.0;
-				jello.v[i][j][k].y = 0.0;
-				jello.v[i][j][k].z = 0.0;
+				jello.v[i][j][k].x = 15.0;
+				jello.v[i][j][k].y = -10.0;
+				jello.v[i][j][k].z = 6.0;
 			}
 
 	// write the jello variable out to file on disk
