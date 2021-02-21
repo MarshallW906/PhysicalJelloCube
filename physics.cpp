@@ -24,6 +24,11 @@ static struct point computeCollisionHookForce(const struct point& massPoint, dou
 static struct point computeCollisionDampForce(const struct point& massPoint, const struct point& curPointVelocity, double dCollision,
 	double collisionPointX, double collisionPointY, double collisionPointZ);
 
+void computeExternalForces(struct world* jello, struct point fExtForce[8][8][8]);
+inline int getForceFieldIndex(int forceGridIndexI, int forceGridIndexJ, int forceGridIndexK, int resolution) {
+	return (forceGridIndexI * resolution * resolution) + (forceGridIndexJ * resolution) + (forceGridIndexK);
+}
+
 /* Computes acceleration to every control point of the jello cube,
    which is in state given by 'jello'.
    Returns result in array 'a'. */
@@ -45,7 +50,9 @@ void computeAcceleration(struct world* jello, struct point a[8][8][8])
 
 	// Force field: double f_extForceField
 	// trilinear interpolate and get the actual force at certain points
-	//struct point fExtForce[8][8][8];
+	struct point fExtForce[8][8][8] = { {{0.0}} };
+	// the force field is between [-2, 2]^3
+	computeExternalForces(jello, fExtForce);
 
 	// at last: double f_all = ma, then a = f_all / m
 	struct point sumForce;
@@ -54,9 +61,9 @@ void computeAcceleration(struct world* jello, struct point a[8][8][8])
 			for (int k = 0; k <= 7; k++) {
 				//pSUM(fHookLinear[i][j][k], fDampLinear[i][j][k], sumForce);
 				pMAKE(
-					fHookLinear[i][j][k].x + fDampLinear[i][j][k].x + fCollision[i][j][k].x,
-					fHookLinear[i][j][k].y + fDampLinear[i][j][k].y + fCollision[i][j][k].y,
-					fHookLinear[i][j][k].z + fDampLinear[i][j][k].z + fCollision[i][j][k].z,
+					fHookLinear[i][j][k].x + fDampLinear[i][j][k].x + fCollision[i][j][k].x + fExtForce[i][j][k].x,
+					fHookLinear[i][j][k].y + fDampLinear[i][j][k].y + fCollision[i][j][k].y + fExtForce[i][j][k].y,
+					fHookLinear[i][j][k].z + fDampLinear[i][j][k].z + fCollision[i][j][k].z + fExtForce[i][j][k].z,
 					sumForce);
 				pMULTIPLY(sumForce, (1.0 / jello->mass), a[i][j][k]);
 			}
@@ -750,4 +757,68 @@ point computeCollisionDampForce(const point& massPoint, const point& curPointVel
 		fCollisionDamp);
 
 	return fCollisionDamp;
+}
+
+void computeExternalForces(struct world* jello, struct point fExtForce[8][8][8])
+{
+	double forceFieldGridLength = 4.0 / (jello->resolution - 1);
+	double offset = 2.0;
+	for (int i = 0; i <= 7; i++) {
+		for (int j = 0; j <= 7; j++) {
+			for (int k = 0; k <= 7; k++) {
+				const struct point& curPoint = jello->p[i][j][k];
+				if (curPoint.x < -2 || curPoint.y < -2 || curPoint.z < -2 ||
+					curPoint.x > 2 || curPoint.y > 2 || curPoint.z > 2) {
+					continue;
+				}
+				double forceFieldGridI = (curPoint.x + offset) / forceFieldGridLength;
+				double forceFieldGridJ = (curPoint.y + offset) / forceFieldGridLength;
+				double forceFieldGridK = (curPoint.z + offset) / forceFieldGridLength;
+				int forceGridIndexI = floor(forceFieldGridI);
+				int forceGridIndexJ = floor(forceFieldGridJ);
+				int forceGridIndexK = floor(forceFieldGridK);
+				double alpha = ((curPoint.x + offset) - (forceGridIndexI * forceFieldGridLength)) / forceFieldGridLength;
+				double beta = ((curPoint.y + offset) - (forceGridIndexJ * forceFieldGridLength)) / forceFieldGridLength;
+				double gamma = ((curPoint.z + offset) - (forceGridIndexK * forceFieldGridLength)) / forceFieldGridLength;
+
+
+				if (forceGridIndexI == jello->resolution - 1) { forceGridIndexI--; alpha = 1.0; }
+				if (forceGridIndexJ == jello->resolution - 1) { forceGridIndexI--; beta = 1.0; }
+				if (forceGridIndexK == jello->resolution - 1) { forceGridIndexI--; gamma = 1.0; }
+
+				//struct point fExtForceOnPoint;
+				pMAKE(
+					(1 - alpha) * (1 - beta) * (1 - gamma) * jello->forceField[getForceFieldIndex(forceGridIndexI, forceGridIndexJ, forceGridIndexK, jello->resolution)].x +
+					(alpha) * (1 - beta) * (1 - gamma) * jello->forceField[getForceFieldIndex(forceGridIndexI + 1, forceGridIndexJ, forceGridIndexK, jello->resolution)].x +
+					(1 - alpha) * (beta) * (1 - gamma) * jello->forceField[getForceFieldIndex(forceGridIndexI, forceGridIndexJ + 1, forceGridIndexK, jello->resolution)].x +
+					(1 - alpha) * (1 - beta) * (gamma)*jello->forceField[getForceFieldIndex(forceGridIndexI, forceGridIndexJ, forceGridIndexK + 1, jello->resolution)].x +
+					(1 - alpha) * (beta) * (gamma)*jello->forceField[getForceFieldIndex(forceGridIndexI, forceGridIndexJ + 1, forceGridIndexK + 1, jello->resolution)].x +
+					(alpha) * (beta) * (1 - gamma) * jello->forceField[getForceFieldIndex(forceGridIndexI + 1, forceGridIndexJ + 1, forceGridIndexK, jello->resolution)].x +
+					(alpha) * (1 - beta) * (gamma)*jello->forceField[getForceFieldIndex(forceGridIndexI + 1, forceGridIndexJ, forceGridIndexK + 1, jello->resolution)].x +
+					(alpha) * (beta) * (gamma)*jello->forceField[getForceFieldIndex(forceGridIndexI + 1, forceGridIndexJ + 1, forceGridIndexK + 1, jello->resolution)].x,
+
+					(1 - alpha) * (1 - beta) * (1 - gamma) * jello->forceField[getForceFieldIndex(forceGridIndexI, forceGridIndexJ, forceGridIndexK, jello->resolution)].y +
+					(alpha) * (1 - beta) * (1 - gamma) * jello->forceField[getForceFieldIndex(forceGridIndexI + 1, forceGridIndexJ, forceGridIndexK, jello->resolution)].y +
+					(1 - alpha) * (beta) * (1 - gamma) * jello->forceField[getForceFieldIndex(forceGridIndexI, forceGridIndexJ + 1, forceGridIndexK, jello->resolution)].y +
+					(1 - alpha) * (1 - beta) * (gamma)*jello->forceField[getForceFieldIndex(forceGridIndexI, forceGridIndexJ, forceGridIndexK + 1, jello->resolution)].y +
+					(1 - alpha) * (beta) * (gamma)*jello->forceField[getForceFieldIndex(forceGridIndexI, forceGridIndexJ + 1, forceGridIndexK + 1, jello->resolution)].y +
+					(alpha) * (beta) * (1 - gamma) * jello->forceField[getForceFieldIndex(forceGridIndexI + 1, forceGridIndexJ + 1, forceGridIndexK, jello->resolution)].y +
+					(alpha) * (1 - beta) * (gamma)*jello->forceField[getForceFieldIndex(forceGridIndexI + 1, forceGridIndexJ, forceGridIndexK + 1, jello->resolution)].y +
+					(alpha) * (beta) * (gamma)*jello->forceField[getForceFieldIndex(forceGridIndexI + 1, forceGridIndexJ + 1, forceGridIndexK + 1, jello->resolution)].y,
+
+					(1 - alpha) * (1 - beta) * (1 - gamma) * jello->forceField[getForceFieldIndex(forceGridIndexI, forceGridIndexJ, forceGridIndexK, jello->resolution)].z +
+					(alpha) * (1 - beta) * (1 - gamma) * jello->forceField[getForceFieldIndex(forceGridIndexI + 1, forceGridIndexJ, forceGridIndexK, jello->resolution)].z +
+					(1 - alpha) * (beta) * (1 - gamma) * jello->forceField[getForceFieldIndex(forceGridIndexI, forceGridIndexJ + 1, forceGridIndexK, jello->resolution)].z +
+					(1 - alpha) * (1 - beta) * (gamma)*jello->forceField[getForceFieldIndex(forceGridIndexI, forceGridIndexJ, forceGridIndexK + 1, jello->resolution)].z +
+					(1 - alpha) * (beta) * (gamma)*jello->forceField[getForceFieldIndex(forceGridIndexI, forceGridIndexJ + 1, forceGridIndexK + 1, jello->resolution)].z +
+					(alpha) * (beta) * (1 - gamma) * jello->forceField[getForceFieldIndex(forceGridIndexI + 1, forceGridIndexJ + 1, forceGridIndexK, jello->resolution)].z +
+					(alpha) * (1 - beta) * (gamma)*jello->forceField[getForceFieldIndex(forceGridIndexI + 1, forceGridIndexJ, forceGridIndexK + 1, jello->resolution)].z +
+					(alpha) * (beta) * (gamma)*jello->forceField[getForceFieldIndex(forceGridIndexI + 1, forceGridIndexJ + 1, forceGridIndexK + 1, jello->resolution)].z,
+
+					fExtForce[i][j][k]
+				);
+
+			}
+		}
+	}
 }
