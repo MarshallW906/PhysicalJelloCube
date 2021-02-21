@@ -37,6 +37,8 @@ struct point
 	double z;
 };
 
+extern struct point g_pMouseDragForce;
+
 // these variables control what is displayed on the screen
 extern int shear, bend, structural, pause, viewingMode, saveScreenToFile;
 
