@@ -29,6 +29,8 @@ inline int getForceFieldIndex(int forceGridIndexI, int forceGridIndexJ, int forc
 	return (forceGridIndexI * resolution * resolution) + (forceGridIndexJ * resolution) + (forceGridIndexK);
 }
 
+void computeCollisionHookAndDampFromIncPlane(struct world* jello, struct point fCollision[8][8][8]);
+
 /* Computes acceleration to every control point of the jello cube,
    which is in state given by 'jello'.
    Returns result in array 'a'. */
@@ -39,14 +41,17 @@ void computeAcceleration(struct world* jello, struct point a[8][8][8])
 	struct point fDampLinear[8][8][8] = { {{0.0}} };
 	computeLinearHookAndDamp(jello, fHookLinear, fDampLinear);
 
-	// collision from bounding box: hook & damp
+	// collision: bounding box: hook & damp
 	struct point fCollision[8][8][8] = { {{0.0}} };
 	computeCollisionHookAndDampFromBoundingBox(jello, fCollision);
 
-	// inclined plane: F(x,y,z) = ax+by+cz+d = 0, on the plane. 
+	// collision: inclined plane: F(x,y,z) = ax+by+cz+d = 0, on the plane. 
 	// If more than 50% points is on one side and the rest is on the other side
-	// then the collision point should be the point in the minority that has the greatest abs(F)
-	// put an artificial collision spring there
+	// then the minority of points are colliding with the plane
+	// then we generate artificial collision springs for them
+	if (jello->incPlanePresent) {
+		computeCollisionHookAndDampFromIncPlane(jello, fCollision);
+	}
 
 	// Force field: double f_extForceField
 	// trilinear interpolate and get the actual force at certain points
@@ -740,7 +745,7 @@ struct point computeCollisionHookForce(const point& massPoint, double kCollision
 point computeCollisionDampForce(const point& massPoint, const point& curPointVelocity, double dCollision, double collisionPointX, double collisionPointY, double collisionPointZ)
 {
 	struct point collisionPoint, collisionSpringVectorNormalized;
-	pMAKE(-2, 0, 0, collisionPoint);
+	pMAKE(collisionPointX, collisionPointY, collisionPointZ, collisionPoint);
 	pDIFFERENCE(massPoint, collisionPoint, collisionSpringVectorNormalized);
 	double length; // to use pNORMALIZE
 	pNORMALIZE(collisionSpringVectorNormalized);
@@ -818,6 +823,51 @@ void computeExternalForces(struct world* jello, struct point fExtForce[8][8][8])
 					fExtForce[i][j][k]
 				);
 
+			}
+		}
+	}
+}
+
+void computeCollisionHookAndDampFromIncPlane(struct world* jello, struct point fCollision[8][8][8])
+{
+	int countPositiveSide = 0, countNegativeSide = 0;
+	double fxyz[8][8][8] = { 0.0 };
+	for (int i = 0; i <= 7; i++) {
+		for (int j = 0; j <= 7; j++) {
+			for (int k = 0; k <= 7; k++) {
+				const struct point& curPoint = jello->p[i][j][k];
+				fxyz[i][j][k] = jello->a * curPoint.x + jello->b * curPoint.y + jello->c * curPoint.z + jello->d;
+				if (fxyz > 0) { countPositiveSide++; }
+				if (fxyz < 0) { countNegativeSide++; }
+			}
+		}
+	}
+	for (int i = 0; i <= 7; i++) {
+		for (int j = 0; j <= 7; j++) {
+			for (int k = 0; k <= 7; k++) {
+				const struct point& curPoint = jello->p[i][j][k];
+				const struct point& curPointVelocity = jello->v[i][j][k];
+				if (countPositiveSide > countNegativeSide) {
+					// should calc all points with negative fxyz
+					if (fxyz[i][j][k] >= 0) { continue; } // ignore "positive" points
+				}
+				else {
+					// should calc all points with positive fxyz
+					if (fxyz[i][j][k] <= 0) { continue; } // ignore "negative" points
+				}
+
+				// collision point: P_projection = x/y/z + phi * a/b/c,
+				// where phi = -(ax+by+cz+d)/(a*a+b*b+c*c), (x,y,z) are curPoint's position
+				double phi = -fxyz[i][j][k] / (jello->a * jello->a + jello->b * jello->b + jello->c * jello->c);
+				//struct point collisionPoint;
+				double collisionPointX = curPoint.x + phi * jello->a,
+					collisionPointY = curPoint.y + phi * jello->b,
+					collisionPointZ = curPoint.z + phi * jello->c;
+				struct point fCollisionIncPlaneHookForce = computeCollisionHookForce(curPoint, jello->kCollision, collisionPointX, collisionPointY, collisionPointZ);
+				struct point fCollisionIncPlaneDampForce = computeCollisionDampForce(curPoint, curPointVelocity, jello->dCollision, collisionPointX, collisionPointY, collisionPointZ);
+				struct point fCollisionForceIncPlane;
+				pSUM(fCollisionIncPlaneHookForce, fCollisionIncPlaneDampForce, fCollisionForceIncPlane);
+				pSUM(fCollisionForceIncPlane, fCollision[i][j][k], fCollision[i][j][k]);
 			}
 		}
 	}

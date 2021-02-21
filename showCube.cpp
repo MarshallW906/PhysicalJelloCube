@@ -230,6 +230,31 @@ void showCube(struct world* jello)
 	glFrontFace(GL_CCW);
 }
 
+inline double calcZFromPlane(struct world* jello, double x, double y) {
+	return -(jello->a * x + jello->b * y + jello->d) / jello->c;
+}
+
+void showIncPlaneIfExists(world* jello)
+{
+	if (jello->incPlanePresent) {
+		glColor4f(1.0, 0.0, 0.0, 0);
+
+		glBegin(GL_LINES);
+
+		for (int i = -2; i <= 2; i++) {
+			glVertex3f(i, -2, calcZFromPlane(jello, i, -2));
+			glVertex3f(i, 2, calcZFromPlane(jello, i, 2));
+		}
+
+		for (int i = -2; i <= 2; i++) {
+			glVertex3f(-2, i, calcZFromPlane(jello, -2, i));
+			glVertex3f(2, i, calcZFromPlane(jello, 2, i));
+		}
+
+		glEnd();
+	}
+}
+
 void showBoundingBox()
 {
 	int i, j;

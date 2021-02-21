@@ -10,6 +10,7 @@
 #define _SHOWCUBE_H_
 
 void showCube(struct world* jello);
+void showIncPlaneIfExists(struct world* jello);
 
 void showBoundingBox();
 
