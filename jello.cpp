@@ -225,6 +225,7 @@ void display()
 
 void doIdle();
 void animateWithoutPhysics();
+void printFrameRate();
 void captureScreenShots();
 
 
@@ -283,12 +284,7 @@ int main(int argc, char** argv)
 
 void doIdle()
 {
-	auto nowTime = std::chrono::system_clock::now();
-	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(nowTime - lastFrameTimePoint);
-	double timeElasped = double(duration.count()) * std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
-	double frameRate = 1.0 / timeElasped;
-	lastFrameTimePoint = nowTime;
-	printf("frame rate: %.2lf\n", frameRate);
+	printFrameRate();
 	//animateWithoutPhysics();
 
 	for (int i = 1; i <= jello.n; i++)
@@ -324,6 +320,16 @@ void animateWithoutPhysics()
 			}
 		}
 	}
+}
+
+void printFrameRate()
+{
+	auto nowTime = std::chrono::system_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(nowTime - lastFrameTimePoint);
+	double timeElasped = double(duration.count()) * std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+	double frameRate = 1.0 / timeElasped;
+	lastFrameTimePoint = nowTime;
+	printf("frame rate: %.2lf\n", frameRate);
 }
 
 void captureScreenShots()
