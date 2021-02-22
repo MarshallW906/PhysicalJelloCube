@@ -13,6 +13,8 @@
 #include "input.h"
 #include "physics.h"
 
+#include <chrono>   
+
 // camera parameters
 double Theta = pi / 6;
 double Phi = pi / 6;
@@ -35,6 +37,8 @@ struct world jello;
 
 int windowWidth, windowHeight;
 
+std::chrono::system_clock::time_point lastFrameTimePoint;
+
 void myinit()
 {
 	glMatrixMode(GL_PROJECTION);
@@ -50,6 +54,8 @@ void myinit()
 	glShadeModel(GL_SMOOTH);
 	glEnable(GL_POLYGON_SMOOTH);
 	glEnable(GL_LINE_SMOOTH);
+
+	lastFrameTimePoint = std::chrono::system_clock::now();
 
 	return;
 }
@@ -277,15 +283,26 @@ int main(int argc, char** argv)
 
 void doIdle()
 {
+	auto nowTime = std::chrono::system_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(nowTime - lastFrameTimePoint);
+	double timeElasped = double(duration.count()) * std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+	double frameRate = 1.0 / timeElasped;
+	lastFrameTimePoint = nowTime;
+	printf("frame rate: %.2lf\n", frameRate);
 	//animateWithoutPhysics();
 
 	for (int i = 1; i <= jello.n; i++)
 	{
 		if (pause == 0) {
 			if (jello.integrator[0] == 'E') // Euler
-				Euler(&jello);
+			{
+				//Euler(&jello);
+				EulerMidpoint(&jello);
+			}
 			if (jello.integrator[0] == 'R') // RK4
+			{
 				RK4(&jello);
+			}
 			//pause = 1;
 		}
 	}

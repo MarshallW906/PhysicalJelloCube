@@ -100,6 +100,49 @@ void Euler(struct world* jello)
 			}
 }
 
+/* performs one step of Euler Midpoint Integration */
+/* as a result, updates the jello structure */
+void EulerMidpoint(struct world* jello)
+{
+	int i, j, k;
+	point a[8][8][8];
+
+	static struct world buffer;
+	static struct point midP[8][8][8], midV[8][8][8];
+
+	buffer = *jello;
+	computeAcceleration(jello, a);
+
+	for (i = 0; i <= 7; i++)
+		for (j = 0; j <= 7; j++)
+			for (k = 0; k <= 7; k++)
+			{
+				// fMid
+				pMULTIPLY(jello->v[i][j][k], jello->dt, midP[i][j][k]);
+				pMULTIPLY(a[i][j][k], jello->dt, midV[i][j][k]);
+				pMULTIPLY(midP[i][j][k], 0.5, buffer.p[i][j][k]);
+				pMULTIPLY(midV[i][j][k], 0.5, buffer.v[i][j][k]);
+				pSUM(jello->p[i][j][k], buffer.p[i][j][k], buffer.p[i][j][k]);
+				pSUM(jello->v[i][j][k], buffer.v[i][j][k], buffer.v[i][j][k]);
+			}
+
+	// evaluate f at the mid point
+	computeAcceleration(&buffer, a);
+
+	for (i = 0; i <= 7; i++)
+		for (j = 0; j <= 7; j++)
+			for (k = 0; k <= 7; k++)
+			{
+				// x(t) + deltaT*fmid
+				jello->p[i][j][k].x += jello->dt * buffer.v[i][j][k].x;
+				jello->p[i][j][k].y += jello->dt * buffer.v[i][j][k].y;
+				jello->p[i][j][k].z += jello->dt * buffer.v[i][j][k].z;
+				jello->v[i][j][k].x += jello->dt * a[i][j][k].x;
+				jello->v[i][j][k].y += jello->dt * a[i][j][k].y;
+				jello->v[i][j][k].z += jello->dt * a[i][j][k].z;
+			}
+}
+
 /* performs one step of RK4 Integration */
 /* as a result, updates the jello structure */
 void RK4(struct world* jello)
