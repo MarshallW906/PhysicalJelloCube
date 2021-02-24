@@ -28,6 +28,7 @@ int g_iLeftMouseButton, g_iMiddleMouseButton, g_iRightMouseButton;
 // number of images saved to disk so far
 int sprite = 0;
 
+double g_mouseDragForceMultiplier = 0.12;
 struct point g_pMouseDragForce = { 0.0 };
 
 // these variables control what is displayed on screen
@@ -38,6 +39,7 @@ struct world jello;
 int windowWidth, windowHeight;
 
 std::chrono::system_clock::time_point lastFrameTimePoint;
+double deltaTime = 0.0;
 
 void myinit()
 {
@@ -336,8 +338,8 @@ void printFrameRate()
 {
 	auto nowTime = std::chrono::system_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(nowTime - lastFrameTimePoint);
-	double timeElasped = double(duration.count()) * std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
-	double frameRate = 1.0 / timeElasped;
+	deltaTime = double(duration.count()) * std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+	double frameRate = 1.0 / deltaTime;
 	lastFrameTimePoint = nowTime;
 	printf("frame rate: %.2lf\n", frameRate);
 }

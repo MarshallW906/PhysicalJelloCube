@@ -26,6 +26,8 @@ extern double R;
 // number of images saved to disk so far
 extern int sprite;
 
+extern double deltaTime;
+
 // mouse control
 extern int g_vMousePos[2];
 extern int g_iLeftMouseButton, g_iMiddleMouseButton, g_iRightMouseButton;
@@ -37,6 +39,7 @@ struct point
 	double z;
 };
 
+extern double g_mouseDragForceMultiplier;
 extern struct point g_pMouseDragForce;
 
 // these variables control what is displayed on the screen

@@ -127,10 +127,10 @@ int main()
 	// the values below are EXAMPLES, to be modified by you as needed
 	strcpy(jello.integrator, "RK4");
 	jello.dt = 0.0005;
-	jello.n = 1;
-	jello.kElastic = 200;
+	jello.n = 5;
+	jello.kElastic = 400;
 	jello.dElastic = 0.25;
-	jello.kCollision = 400.0;
+	jello.kCollision = 300.0;
 	jello.dCollision = 0.25;
 	jello.mass = 1.0 / 512;
 
@@ -156,11 +156,11 @@ int main()
 				z = -2 + 4 * (1.0 * k / (jello.resolution - 1));
 
 				jello.forceField[i * jello.resolution * jello.resolution
-					+ j * jello.resolution + k].x = 0;
+					+ j * jello.resolution + k].x = 0.1;
 				jello.forceField[i * jello.resolution * jello.resolution
-					+ j * jello.resolution + k].y = 0;
+					+ j * jello.resolution + k].y = -0.2;
 				jello.forceField[i * jello.resolution * jello.resolution
-					+ j * jello.resolution + k].z = 0;
+					+ j * jello.resolution + k].z = 0.05;
 			}
 
 	// set the positions of control points
@@ -168,9 +168,9 @@ int main()
 		for (j = 0; j <= 7; j++)
 			for (k = 0; k <= 7; k++)
 			{
-				jello.p[i][j][k].x = 1.0 * i / 7;
+				jello.p[i][j][k].x = 2.0 * i / 7;
 				jello.p[i][j][k].y = 1.0 * j / 7;
-				jello.p[i][j][k].z = 1.0 * k / 7;
+				jello.p[i][j][k].z = 0.5 * k / 7;
 				/* :O :w
 				 Is this intentionally left here so that we will definitely notice the weird position of the corner point
 				 and then we will have to figure out what goes wrong with createWorld?

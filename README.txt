@@ -47,6 +47,7 @@ Misc:
   - what I did was to get the camera's viewMatrix by glGetFloatv(GL_MODELVIEW_MATRIX, Glfloat[16])
     - and then extract the first & second column as the camera's Right & Up axes
     - then we can use like mouseDelta to generate the forces and then apply them in computeAcceleration()
+  - you can change g_mouseDragForceMultiplier if you have a hard time noticing this effect.
 
 - implemented midpoint method 
   - can be invoked by setting the first line of .w files to "Midpoint" (jello.integrator[0]=='M')
