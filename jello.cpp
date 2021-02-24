@@ -225,6 +225,7 @@ void display()
 
 void doIdle();
 void animateWithoutPhysics();
+void animateByPhysics();
 void printFrameRate();
 void captureScreenShots();
 
@@ -285,25 +286,15 @@ int main(int argc, char** argv)
 void doIdle()
 {
 	printFrameRate();
-	//animateWithoutPhysics();
-
-	for (int i = 1; i <= jello.n; i++)
-	{
-		if (pause == 0) {
-			if (jello.integrator[0] == 'E') // Euler
-			{
-				//Euler(&jello);
-				EulerMidpoint(&jello);
-			}
-			if (jello.integrator[0] == 'R') // RK4
-			{
-				RK4(&jello);
-			}
-			//pause = 1;
-		}
-	}
 
 	captureScreenShots();
+
+	if (pause == 0) 
+	{
+		//animateWithoutPhysics();
+		animateByPhysics();
+	}
+
 	glutPostRedisplay();
 }
 
@@ -318,6 +309,25 @@ void animateWithoutPhysics()
 				jello.p[i][j][k].y += jello.dt * jello.v[i][j][k].y * speed;
 				jello.p[i][j][k].x += jello.dt * jello.v[i][j][k].x * speed;
 			}
+		}
+	}
+}
+
+void animateByPhysics()
+{
+	for (int i = 1; i <= jello.n; i++)
+	{
+		if (jello.integrator[0] == 'E') // Euler
+		{
+			Euler(&jello);
+		}
+		if (jello.integrator[0] == 'R') // RK4
+		{
+			RK4(&jello);
+		}
+		if (jello.integrator[0] == 'M') // Midpoint
+		{
+			EulerMidpoint(&jello);
 		}
 	}
 }

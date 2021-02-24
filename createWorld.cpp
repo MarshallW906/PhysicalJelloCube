@@ -168,9 +168,9 @@ int main()
 		for (j = 0; j <= 7; j++)
 			for (k = 0; k <= 7; k++)
 			{
-				jello.p[i][j][k].x = 2.0 * i / 7;
+				jello.p[i][j][k].x = 1.0 * i / 7;
 				jello.p[i][j][k].y = 1.0 * j / 7;
-				jello.p[i][j][k].z = 0.5 * k / 7;
+				jello.p[i][j][k].z = 1.0 * k / 7;
 				/* :O :w
 				 Is this intentionally left here so that we will definitely notice the weird position of the corner point
 				 and then we will have to figure out what goes wrong with createWorld?
@@ -204,9 +204,9 @@ int main()
 		for (j = 0; j <= 7; j++)
 			for (k = 0; k <= 7; k++)
 			{
-				jello.v[i][j][k].x = 15.0;
-				jello.v[i][j][k].y = -10.0;
-				jello.v[i][j][k].z = 6.0;
+				jello.v[i][j][k].x = 0.0;
+				jello.v[i][j][k].y = 0.0;
+				jello.v[i][j][k].z = 0.0;
 			}
 
 	// write the jello variable out to file on disk

@@ -61,7 +61,26 @@ void mouseMotionDrag(int x, int y)
 
 	if (g_iLeftMouseButton) // handle mouse dragging forces
 	{
+		static GLfloat model[16];
+		glGetFloatv(GL_MODELVIEW_MATRIX, model);
 
+		// if mouse is dragging vertically, then we add forces onto camera's UP axis
+		// if .... horizontally, then we add forces onto the RIGHT axis
+		// the matrix is column major
+		struct point camRight = { 0.0 }, camUp = { 0.0 };
+		pMAKE(model[1], model[5], model[9], camUp);
+		pMAKE(model[0], model[4], model[8], camRight);
+		//pMAKE(model[2], model[6], model[10], camForward);
+
+		double right = vMouseDelta[0] * 0.2 * 1;
+		double up = vMouseDelta[1] * 0.2 * -1;
+
+		pMULTIPLY(camUp, up, camUp);
+		pMULTIPLY(camRight, right, camRight);
+		pSUM(camRight, camUp, g_pMouseDragForce);
+
+		g_vMousePos[0] = x;
+		g_vMousePos[1] = y;
 	}
 }
 

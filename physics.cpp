@@ -66,9 +66,9 @@ void computeAcceleration(struct world* jello, struct point a[8][8][8])
 			for (int k = 0; k <= 7; k++) {
 				//pSUM(fHookLinear[i][j][k], fDampLinear[i][j][k], sumForce);
 				pMAKE(
-					fHookLinear[i][j][k].x + fDampLinear[i][j][k].x + fCollision[i][j][k].x + fExtForce[i][j][k].x,
-					fHookLinear[i][j][k].y + fDampLinear[i][j][k].y + fCollision[i][j][k].y + fExtForce[i][j][k].y,
-					fHookLinear[i][j][k].z + fDampLinear[i][j][k].z + fCollision[i][j][k].z + fExtForce[i][j][k].z,
+					fHookLinear[i][j][k].x + fDampLinear[i][j][k].x + fCollision[i][j][k].x + fExtForce[i][j][k].x + g_pMouseDragForce.x,
+					fHookLinear[i][j][k].y + fDampLinear[i][j][k].y + fCollision[i][j][k].y + fExtForce[i][j][k].y + g_pMouseDragForce.y,
+					fHookLinear[i][j][k].z + fDampLinear[i][j][k].z + fCollision[i][j][k].z + fExtForce[i][j][k].z + g_pMouseDragForce.z,
 					sumForce);
 				pMULTIPLY(sumForce, (1.0 / jello->mass), a[i][j][k]);
 			}
