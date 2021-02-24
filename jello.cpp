@@ -28,7 +28,7 @@ int g_iLeftMouseButton, g_iMiddleMouseButton, g_iRightMouseButton;
 // number of images saved to disk so far
 int sprite = 0;
 
-double g_mouseDragForceMultiplier = 0.12;
+double g_mouseDragForceMultiplier = 0.02;
 struct point g_pMouseDragForce = { 0.0 };
 
 // these variables control what is displayed on screen
