@@ -361,7 +361,7 @@ void captureScreenShots()
 	if (saveScreenToFile == 1)
 	{
 		saveScreenshot(windowWidth, windowHeight, s);
-		saveScreenToFile = 0; // save only once, change this if you want continous image generation (i.e. animation)
+		//saveScreenToFile = 0; // save only once, change this if you want continous image generation (i.e. animation)
 		sprite++;
 	}
 

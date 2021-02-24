@@ -72,8 +72,8 @@ void mouseMotionDrag(int x, int y)
 		pMAKE(model[0], model[4], model[8], camRight);
 		//pMAKE(model[2], model[6], model[10], camForward);
 
-		double right = vMouseDelta[0] * 0.2 * 1;
-		double up = vMouseDelta[1] * 0.2 * -1;
+		double right = vMouseDelta[0] * 0.05 * 1;
+		double up = vMouseDelta[1] * 0.05 * -1;
 
 		pMULTIPLY(camUp, up, camUp);
 		pMULTIPLY(camRight, right, camRight);
@@ -81,6 +81,9 @@ void mouseMotionDrag(int x, int y)
 
 		g_vMousePos[0] = x;
 		g_vMousePos[1] = y;
+	}
+	else {
+		pMAKE(0, 0, 0, g_pMouseDragForce);
 	}
 }
 
