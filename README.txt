@@ -6,11 +6,14 @@ Marshall Wang
 
 ================
 
+- NOTICE:
+  - If you want to directly run the executable and capture the screen shots, please create a directory named as "screenShots", since I modified the file saving paths.
+    - You don't need to do that manually if you build & run it at Visual Studio. I added some post-build events taking care of this.
+  - If you are to run createWorld.exe, please create a directory named as "world" at the same folder.
+
 <Description of what you have accomplished>
 *Note: tested successfully on VS2019*
 Everything in the requirements:
-- NOTICE: If you want to directly run the executable and capture the screen shots, please create a directory named as "screenShots", since I modified the file saving paths.
-  - You don't need to do that manually if you build & run it at Visual Studio. I added some post-build events taking care of this.
 - finished computeAcceleration() and can animate the jello cube based on a realistic physical model
 - collision response
   - with bounding box
@@ -31,6 +34,7 @@ Misc:
 - changed the description of pDIFFERENCE, which should be (src1 - src2)
 - added macro pLENGTH
 
+// -----------------------------------------------------------------------------------------
 <Also, explain any extra credit that you have implemented.>
 - collision with inclined plane
   - collision point: it's basically solving the equation: F(P_outplane + alpha * vecPlaneNormal) = 0 for alpha
