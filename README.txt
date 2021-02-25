@@ -76,4 +76,7 @@ Misc:
     - RK4 allows the largest magnitude, then Midpoint, and Euler has the worse case
     - If you are simply applying forces to every point by dragging in the blanks, the forces is not multiplied
   - You can change these settings in jello.cpp between line 31 and line 35.
+    - You may hardly notice the forces when dragging in the blank, which is because the base multiplier is very small.
+    - this is because it's fairly easy to blow up and this is a somehow stable parameter.
+    - please drag your mouse fast or consider change the g_mouseDragForceBaseMultiplier in jello.cpp:line 31
 
