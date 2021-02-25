@@ -61,8 +61,8 @@ void mouseMotionDrag(int x, int y)
 
 	if (g_iLeftMouseButton) // handle mouse dragging forces
 	{
-		static GLfloat model[16];
-		glGetFloatv(GL_MODELVIEW_MATRIX, model);
+		static GLdouble model[16];
+		glGetDoublev(GL_MODELVIEW_MATRIX, model);
 
 		// if mouse is dragging vertically, then we add forces onto camera's UP axis
 		// if .... horizontally, then we add forces onto the RIGHT axis
