@@ -28,8 +28,13 @@ int g_iLeftMouseButton, g_iMiddleMouseButton, g_iRightMouseButton;
 // number of images saved to disk so far
 int sprite = 0;
 
-double g_mouseDragForceMultiplier = 0.02;
+double g_mouseDragForceBaseMultiplier = 0.02;
 struct point g_pMouseDragForce = { 0.0 };
+double g_dragForceMultiplierSinglePoint_Euler = 10;
+double g_dragForceMultiplierSinglePoint_Midpoint = 40;
+double g_dragForceMultiplierSinglePoint_RK4 = 400;
+int g_iPickingAMassPoint = 0;
+int g_pickedPointIndices[3] = { -1, -1, -1 };
 
 // these variables control what is displayed on screen
 int shear = 0, bend = 0, structural = 1, pause = 0, viewingMode = 0, saveScreenToFile = 0;
@@ -49,6 +54,7 @@ void myinit()
 
 	// set background color to grey
 	glClearColor(0.5, 0.5, 0.5, 0.0);
+	glClearStencil(0);
 
 	glCullFace(GL_BACK);
 	glEnable(GL_CULL_FACE);
@@ -89,7 +95,7 @@ void reshape(int w, int h)
 
 void display()
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -210,9 +216,17 @@ void display()
 	// enable lighting
 	glEnable(GL_LIGHTING);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_STENCIL_TEST); // Enables testing AND writing functionalities
+	//glStencilMask(0xFF); // 0xFF is the default value
+
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
 	// show the cube
+	// inside it writes 1 to the stencil when rendering the jello cube, both wireframe & polygon mode
 	showCube(&jello);
+
+	// disable stencil buffer modifications
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
 	glDisable(GL_LIGHTING);
 
@@ -287,7 +301,7 @@ int main(int argc, char** argv)
 
 void doIdle()
 {
-	printFrameRate();
+	//printFrameRate();
 
 	captureScreenShots();
 

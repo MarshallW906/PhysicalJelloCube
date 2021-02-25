@@ -55,7 +55,6 @@ void showCube(struct world* jello)
 		exit(0);
 	}
 
-
 #define NODE(face,i,j) (*((struct point * )(jello->p) + pointMap((face),(i),(j))))
 
 
@@ -73,6 +72,9 @@ void showCube(struct world* jello)
       glVertex3f(jello->p[ip][jp][kp].x,jello->p[ip][jp][kp].y,jello->p[ip][jp][kp].z);\
     }\
 
+
+	// writes 1 to stencil when rendering the jello cube, for both wireframe mode & polygon mode
+	glStencilFunc(GL_ALWAYS, 1, ~(0u));
 
 	if (viewingMode == 0) // render wireframe
 	{
@@ -227,6 +229,7 @@ void showCube(struct world* jello)
 
 		}
 	} // end for loop over faces
+
 	glFrontFace(GL_CCW);
 }
 

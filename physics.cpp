@@ -60,16 +60,42 @@ void computeAcceleration(struct world* jello, struct point a[8][8][8])
 	computeExternalForces(jello, fExtForce);
 
 	// at last: double f_all = ma, then a = f_all / m
+	double dragForceMultiplierSinglePoint;
+	if (jello->integrator[0] == 'E')
+	{
+		dragForceMultiplierSinglePoint = g_dragForceMultiplierSinglePoint_Euler;
+	}
+	else if (jello->integrator[0] == 'R')
+	{
+		dragForceMultiplierSinglePoint = g_dragForceMultiplierSinglePoint_RK4;
+	}
+	else if (jello->integrator[0] == 'M')
+	{
+		dragForceMultiplierSinglePoint = g_dragForceMultiplierSinglePoint_Midpoint;
+	}
 	struct point sumForce;
 	for (int i = 0; i <= 7; i++) {
 		for (int j = 0; j <= 7; j++) {
 			for (int k = 0; k <= 7; k++) {
 				//pSUM(fHookLinear[i][j][k], fDampLinear[i][j][k], sumForce);
 				pMAKE(
-					fHookLinear[i][j][k].x + fDampLinear[i][j][k].x + fCollision[i][j][k].x + fExtForce[i][j][k].x + g_pMouseDragForce.x,
-					fHookLinear[i][j][k].y + fDampLinear[i][j][k].y + fCollision[i][j][k].y + fExtForce[i][j][k].y + g_pMouseDragForce.y,
-					fHookLinear[i][j][k].z + fDampLinear[i][j][k].z + fCollision[i][j][k].z + fExtForce[i][j][k].z + g_pMouseDragForce.z,
+					fHookLinear[i][j][k].x + fDampLinear[i][j][k].x + fCollision[i][j][k].x + fExtForce[i][j][k].x,
+					fHookLinear[i][j][k].y + fDampLinear[i][j][k].y + fCollision[i][j][k].y + fExtForce[i][j][k].y,
+					fHookLinear[i][j][k].z + fDampLinear[i][j][k].z + fCollision[i][j][k].z + fExtForce[i][j][k].z,
 					sumForce);
+				if (g_iPickingAMassPoint) // only apply the drag force on this certain point
+				{
+					if (i == g_pickedPointIndices[0] && j == g_pickedPointIndices[1] && k == g_pickedPointIndices[2])
+					{
+						struct point mouseDragForceOnSinglePoint;
+						pMULTIPLY(g_pMouseDragForce, dragForceMultiplierSinglePoint, mouseDragForceOnSinglePoint);
+						pSUM(sumForce, mouseDragForceOnSinglePoint, sumForce);
+					}
+				}
+				else // apply drag force on each point if no point is being selected
+				{
+					pSUM(sumForce, g_pMouseDragForce, sumForce);
+				}
 				pMULTIPLY(sumForce, (1.0 / jello->mass), a[i][j][k]);
 			}
 		}

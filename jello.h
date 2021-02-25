@@ -39,8 +39,13 @@ struct point
 	double z;
 };
 
-extern double g_mouseDragForceMultiplier;
+extern double g_mouseDragForceBaseMultiplier;
 extern struct point g_pMouseDragForce;
+extern double g_dragForceMultiplierSinglePoint_Euler;
+extern double g_dragForceMultiplierSinglePoint_Midpoint;
+extern double g_dragForceMultiplierSinglePoint_RK4;
+extern int g_iPickingAMassPoint;
+extern int g_pickedPointIndices[3];
 
 // these variables control what is displayed on the screen
 extern int shear, bend, structural, pause, viewingMode, saveScreenToFile;

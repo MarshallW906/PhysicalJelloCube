@@ -72,8 +72,8 @@ void mouseMotionDrag(int x, int y)
 		pMAKE(model[0], model[4], model[8], camRight);
 		//pMAKE(model[2], model[6], model[10], camForward);
 
-		double right = vMouseDelta[0] * g_mouseDragForceMultiplier * 1;
-		double up = vMouseDelta[1] * g_mouseDragForceMultiplier * -1;
+		double right = vMouseDelta[0] * g_mouseDragForceBaseMultiplier * 1;
+		double up = vMouseDelta[1] * g_mouseDragForceBaseMultiplier * -1;
 
 		pMULTIPLY(camUp, up, camUp);
 		pMULTIPLY(camRight, right, camRight);
@@ -99,6 +99,69 @@ void mouseButton(int button, int state, int x, int y)
 	{
 	case GLUT_LEFT_BUTTON:
 		g_iLeftMouseButton = (state == GLUT_DOWN);
+		if (state == GLUT_DOWN) 
+		{
+			GLdouble model[16];
+			glGetDoublev(GL_MODELVIEW_MATRIX, model);
+
+			GLdouble proj[16];
+			glGetDoublev(GL_PROJECTION_MATRIX, proj);
+
+			GLint view[4];
+			glGetIntegerv(GL_VIEWPORT, view);
+
+			int winX = x;
+			int winY = view[3] - 1 - y;
+
+			float zValue;
+			glReadPixels(winX, winY, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &zValue);
+
+			GLubyte stencilValue;
+			glReadPixels(winX, winY, 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &stencilValue);
+
+			GLdouble worldX, worldY, worldZ;
+			gluUnProject(winX, winY, zValue, model, proj, view, &worldX, &worldY, &worldZ);
+
+			if (stencilValue == 1)
+			{
+				g_vMousePos[0] = x;
+				g_vMousePos[1] = y;
+
+				struct point pickedPoint;
+				pMAKE(worldX, worldY, worldZ, pickedPoint);
+				printf("%.2lf, %.2lf, %.2lf picked\n", worldX, worldY, worldZ);
+
+				// find a closest point
+				double minDistance = 100.0f, distance;
+				struct point vecDiff;
+				int pickedPointIndices[3] = { -1, -1, -1 };
+				for (int i = 0; i <= 7; i++)
+					for (int j = 0; j <= 7; j++) 
+						for (int k = 0; k <= 7; k++) 
+						{
+							pDIFFERENCE(pickedPoint, jello.p[i][j][k], vecDiff);
+							pLENGTH(vecDiff, distance);
+							if (distance < minDistance) 
+							{
+								minDistance = distance;
+								pickedPointIndices[0] = i;
+								pickedPointIndices[1] = j;
+								pickedPointIndices[2] = k;
+							}
+						}
+				
+				printf("clicked on vertex: %d, %d, %d\n", pickedPointIndices[0], pickedPointIndices[1], pickedPointIndices[2]);
+				g_pickedPointIndices[0] = pickedPointIndices[0];
+				g_pickedPointIndices[1] = pickedPointIndices[1];
+				g_pickedPointIndices[2] = pickedPointIndices[2];
+
+				g_iPickingAMassPoint = 1;
+			}
+		}
+		else
+		{
+			g_iPickingAMassPoint = 0;
+		}
 		break;
 	case GLUT_MIDDLE_BUTTON:
 		g_iMiddleMouseButton = (state == GLUT_DOWN);
