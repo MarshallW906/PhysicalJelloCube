@@ -301,7 +301,7 @@ int main(int argc, char** argv)
 
 void doIdle()
 {
-	//printFrameRate();
+	printFrameRate();
 
 	captureScreenShots();
 
