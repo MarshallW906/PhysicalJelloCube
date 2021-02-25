@@ -9,12 +9,15 @@ Marshall Wang
 - NOTICE:
   - If you want to directly run the executable and capture the screen shots, please create a directory named as "screenShots", since I modified the file saving paths.
     - You don't need to do that manually if you build & run it at Visual Studio. I added some post-build events taking care of this.
-  - If you are to run createWorld.exe, please create a directory named as "world" at the same folder.
+  - If you are to run createWorld.exe, please create a directory named as "world" at the same folder. It will create a my_jello.w file there
+  - I modified the rotate.w since it always blows up when using Euler. The new file being rotate_my.w, can be simulated stably by Euler.
+    - In rotate_my.w, I changed kElastic & dElastic, but did not change the timestep at all.
+    - I also implemented Midpoint method, please see the last section.
 
 <Description of what you have accomplished>
 *Note: tested successfully on VS2019*
-Everything in the requirements:
-- finished computeAcceleration() and can animate the jello cube based on a realistic physical model
+I finished everything in the core requirements:
+- computeAcceleration() and can animate the jello cube based on a realistic physical model
 - collision response
   - with bounding box
     - since the bounding box is stationed there, I can simply compare each point's x/y/z-axis positions to judge if it's colliding with the six sides
